@@ -13,6 +13,10 @@ export default function AdminDashboardPage() {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  
+  // Estados da fechadura
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
 
   // Formulário para novo veículo
   const [formData, setFormData] = useState({
@@ -99,7 +103,6 @@ export default function AdminDashboardPage() {
       if (selectedFiles.length > 0) {
         for (let i = 0; i < selectedFiles.length; i++) {
           const file = selectedFiles[i];
-          // Comprime no cliente via Canvas HTML5
           const compressed = await compressImage(file);
           
           const fileName = `${vehicleId}/${Date.now()}_${i}.webp`;
@@ -113,7 +116,6 @@ export default function AdminDashboardPage() {
               .from('vehicle-images')
               .getPublicUrl(fileName);
 
-            // Regista na tabela vehicle_images
             await supabase.from('vehicle_images').insert([
               {
                 vehicle_id: vehicleId,
@@ -148,17 +150,68 @@ export default function AdminDashboardPage() {
     }
   }
 
-  // Apagar veículo
+  // Apagar veículo e limpar as fotos do Storage
   async function handleDelete(id: string) {
-    if (!confirm('Tem certeza que deseja remover este veículo?')) return;
+    if (!confirm('Tem certeza que deseja remover este veículo definitivamente?')) return;
     
-    const { error } = await supabase.from('vehicles').delete().eq('id', id);
-    if (!error) {
-      fetchVehicles();
-    } else {
-      alert('Erro ao apagar veículo.');
+    try {
+      // 1. Procurar todas as fotos deste veículo na pasta dele no Supabase Storage
+      const { data: files } = await supabase.storage.from('vehicle-images').list(id);
+      
+      // 2. Se houver fotos, mandar apagar fisicamente para libertar espaço (MBs)
+      if (files && files.length > 0) {
+        const pathsToRemove = files.map(file => `${id}/${file.name}`);
+        await supabase.storage.from('vehicle-images').remove(pathsToRemove);
+      }
+
+      // 3. Depois das fotos apagadas, remove os dados de texto do banco de dados
+      const { error } = await supabase.from('vehicles').delete().eq('id', id);
+      
+      if (error) throw error;
+      
+      fetchVehicles(); // Atualiza a lista na tela
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao apagar o veículo e limpar as fotos.');
     }
   }
+
+  // --- INÍCIO DA FECHADURA ---
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (password === 'vcar2026') {
+              sessionStorage.setItem('wa_admin_auth', 'true');
+              setIsAuthenticated(true);
+            } else {
+              alert('Senha incorreta!');
+            }
+          }} 
+          className="bg-gray-900 p-8 rounded-2xl border border-gray-800 w-full max-w-md space-y-6"
+        >
+          <div className="text-center space-y-2">
+            <img src="/logovcar.jpg" alt="Logo" className="h-12 mx-auto object-contain mb-4" />
+            <h1 className="text-2xl font-black text-white uppercase tracking-tight">Gestão Interna</h1>
+            <p className="text-gray-400 text-sm">Área exclusiva para gestão de veículos</p>
+          </div>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Digite sua senha"
+            className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-600 transition"
+          />
+          <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg shadow-red-600/20">
+            Entrar no Painel
+          </button>
+        </form>
+      </div>
+    );
+  }
+  // --- FIM DA FECHADURA ---
 
   return (
     <div className="min-h-screen bg-gray-950 text-white font-sans flex flex-col">
@@ -166,22 +219,25 @@ export default function AdminDashboardPage() {
       <header className="bg-black border-b border-gray-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center text-white font-black text-xl shadow-lg shadow-red-600/30">
-              WA
-            </div>
-            <div>
-              <span className="text-lg font-black tracking-tight text-white uppercase block leading-none">
-                {STORE_CONFIG.name}
-              </span>
-              <span className="text-xs text-red-500 font-bold uppercase tracking-widest">Painel Administrativo</span>
-            </div>
+            <img src="/logo.png" alt="Logo" className="h-8 object-contain" />
           </div>
-          <Link
-            href="/"
-            className="text-xs font-bold uppercase tracking-wider bg-gray-900 hover:bg-gray-800 text-gray-300 px-4 py-2.5 rounded-xl border border-gray-800 transition"
-          >
-            Ver Site Público →
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                sessionStorage.removeItem('wa_admin_auth');
+                setIsAuthenticated(false);
+              }}
+              className="text-xs font-bold uppercase tracking-wider bg-gray-900 hover:bg-red-600/20 text-red-400 px-4 py-2.5 rounded-xl border border-gray-800 transition"
+            >
+              Sair
+            </button>
+            <Link
+              href="/"
+              className="text-xs font-bold uppercase tracking-wider bg-gray-900 hover:bg-gray-800 text-gray-300 px-4 py-2.5 rounded-xl border border-gray-800 transition"
+            >
+              Ver Site Público →
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -306,7 +362,7 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase text-gray-400 mb-2">
-                  Fotos do Veículo (Máx. 6 fotos - Compressão Automática)
+                  Fotos do Veículo (Máx. 6 fotos)
                 </label>
                 <input
                   type="file"
@@ -324,7 +380,7 @@ export default function AdminDashboardPage() {
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Detalhes adicionais, opcionais, estado dos pneus, revisões..."
+                placeholder="Detalhes adicionais..."
                 className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white text-sm focus:border-red-600 outline-none transition resize-none"
               ></textarea>
             </div>

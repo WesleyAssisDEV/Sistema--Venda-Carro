@@ -1,6 +1,6 @@
 export const STORE_CONFIG = {
-  name: "WA Code Veículos",
-  phone: "5511999998888", // Coloque o seu WhatsApp aqui (apenas números)
+  name: "VCar Automotiva",
+  whatsapp: "5511945698237", // Coloque o seu WhatsApp aqui (apenas números)
 };
 
 export function formatCurrency(value: number): string {

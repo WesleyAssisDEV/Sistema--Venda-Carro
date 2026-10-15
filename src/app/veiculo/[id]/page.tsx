@@ -2,8 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { STORE_CONFIG, formatCurrency, formatKM, generateWhatsAppLink } from '@/lib/utils';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-
-
+import Galeria from './galeria';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -30,8 +29,8 @@ export default async function VehicleDetailPage({ params }: PageProps) {
     (a: any, b: any) => a.display_order - b.display_order
   );
   
-  const mainImage = sortedImages?.[0]?.public_url || 'https://via.placeholder.com/800x600?text=Sem+Foto';
-  const whatsappUrl = generateWhatsAppLink(vehicle);
+  const whatsappMessage = `Olá! Tenho interesse no ${vehicle.make} ${vehicle.model} ${vehicle.year} que vi no site.`;
+  const whatsappUrl = `https://wa.me/5511945698237?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
     <div className="min-h-screen bg-gray-950 text-white font-sans flex flex-col">
@@ -39,9 +38,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
       <header className="bg-black border-b border-gray-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center text-white font-black text-xl shadow-lg shadow-red-600/30 group-hover:bg-red-700 transition">
-              WA
-            </div>
+           <img src="/logovcar.jpg" alt="Logótipo" className="h-10 w-auto object-contain" />
             <span className="text-2xl font-black tracking-tight text-white uppercase">
               {STORE_CONFIG.name}
             </span>
@@ -59,35 +56,11 @@ export default async function VehicleDetailPage({ params }: PageProps) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
-          {/* Coluna da Esquerda: Galeria de Imagens */}
+          {/* Coluna da Esquerda: Galeria de Imagens e Descrição */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="relative aspect-[16/10] bg-black rounded-3xl overflow-hidden border border-gray-800 shadow-2xl">
-              <img
-                src={mainImage}
-                alt={`${vehicle.make} ${vehicle.model}`}
-                className="w-full h-full object-cover"
-              />
-              {vehicle.is_featured && (
-                <span className="absolute top-4 left-4 bg-red-600 text-white text-xs font-black uppercase px-4 py-1.5 rounded-lg shadow-lg">
-                  Destaque
-                </span>
-              )}
-            </div>
-
-            {/* Miniaturas de Fotos */}
-            {sortedImages.length > 1 && (
-              <div className="grid grid-cols-5 gap-3">
-                {sortedImages.map((img: any, idx: number) => (
-                  <div key={img.id || idx} className="aspect-[16/10] bg-black rounded-xl overflow-hidden border border-gray-800">
-                    <img
-                      src={img.public_url}
-                      alt={`Miniatura ${idx + 1}`}
-                      className="w-full h-full object-cover hover:opacity-75 transition cursor-pointer"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+            
+            {/* Componente Galeria Interativa */}
+            <Galeria images={sortedImages} altText={`${vehicle.make} ${vehicle.model}`} />
 
             {/* Descrição do Veículo */}
             {vehicle.description && (
