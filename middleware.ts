@@ -34,17 +34,7 @@ export async function middleware(request: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession();
 
-  const ADMIN_PATH = '/gestao-interna-segura';
-  const isLoginPage = request.nextUrl.pathname === `${ADMIN_PATH}/login`;
-  const isAdminRoute = request.nextUrl.pathname.startsWith(ADMIN_PATH);
-
-  if (isAdminRoute && !isLoginPage && !session) {
-    return NextResponse.redirect(new URL(`${ADMIN_PATH}/login`, request.url));
-  }
-
-  if (isLoginPage && session) {
-    return NextResponse.redirect(new URL(`${ADMIN_PATH}/dashboard`, request.url));
-  }
+  
 
   return response;
 }
