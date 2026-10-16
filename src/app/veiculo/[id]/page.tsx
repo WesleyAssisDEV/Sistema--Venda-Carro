@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Galeria from './galeria';
 
+export const instant = false;
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }
