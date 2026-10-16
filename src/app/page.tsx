@@ -1,8 +1,8 @@
 import { createServerSupabaseClient } from '../lib/supabase/server';
-import { STORE_CONFIG, formatCurrency, formatKM, generateWhatsAppLink } from '../lib/utils';
+import { STORE_CONFIG, formatCurrency, formatKM } from '../lib/utils';
 import Link from 'next/link';
 
-
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage({
   searchParams,
