@@ -23,7 +23,7 @@ export default function AdminDashboardPage() {
     make: '',
     model: '',
     version: '',
-    year: new Date().getFullYear(),
+    year: 2026,
     price: '',
     mileage: '',
     transmission: 'Automático',
