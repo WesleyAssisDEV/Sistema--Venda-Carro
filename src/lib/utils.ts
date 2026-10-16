@@ -17,5 +17,5 @@ export function formatKM(value: number): string {
 
 export function generateWhatsAppLink(vehicle: { make: string; model: string; version: string; year: number; price: number }): string {
   const text = `Olá! Vi o anúncio no site e tenho interesse no veículo:\n\n*${vehicle.make} ${vehicle.model} - ${vehicle.version}*\nAno: ${vehicle.year}\nValor: ${formatCurrency(vehicle.price)}\n\nPoderia me enviar mais informações?`;
-  return `https://wa.me/${STORE_CONFIG.phone}?text=${encodeURIComponent(text)}`;
+  return `https://wa.me/${STORE_CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
 }

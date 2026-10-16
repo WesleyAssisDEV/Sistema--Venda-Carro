@@ -216,7 +216,7 @@ export default async function HomePage({
           <div className="space-y-4">
             <h4 className="text-white text-base font-black uppercase tracking-wider">Localização</h4>
             <p className="text-gray-400">
-              {STORE_CONFIG.address || "Insira o endereço da sua loja aqui"}
+              {(STORE_CONFIG as any).address || "R: bezerra da silva N:48, Residencial santo antonio"}
             </p>
           </div>
 
